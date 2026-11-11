@@ -1,0 +1,186 @@
+
+const center = [8.42264, 124.81425];
+
+const map = L.map("map").setView(center, 15);
+
+// ADD OPENSTREETMAP
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  attribution: "&copy; OpenStreetMap contributors",
+  maxZoom: 19,
+}).addTo(map);
+
+// THREE COMMUNITY LANDMARKS IN BARANGAY ALAE
+// Some coordinates are approximate.
+
+const locations = [
+  {
+    name: "Alae Barangay Hall",
+    lat: 8.42264,
+    lng: 124.81425,
+    description: "Local government office serving Barangay Alae, Manolo Fortich, Bukidnon. Approximate map location.",
+  },
+  {
+    name: "Alae Central Elementary School",
+    lat: 8.42041,
+    lng: 124.81388,
+    description: "Elementary education facility serving the Alae community.",
+  },
+  {
+    name: "Alae National High School",
+    lat: 8.42172,
+    lng: 124.81092,
+    description: "Secondary education facility in Barangay Alae.",
+  },
+];
+
+// CREATE MARKERS AND POPUPS
+locations.forEach(function (place) {
+  const marker = L.marker([place.lat, place.lng]).addTo(map);
+
+  marker.bindPopup(
+    "<b>" +
+      place.name +
+      "</b>" +
+      "<p>" +
+      place.description +
+      "</p>" +
+      "<p>Latitude: " +
+      place.lat +
+      "<br>Longitude: " +
+      place.lng +
+      "</p>"
+  );
+});
+
+// CREATE 500-METER CIRCLE
+L.circle(center, {
+  color: "blue",
+  fillColor: "#30a3ec",
+  fillOpacity: 0.3,
+  radius: 500,
+}).addTo(map);
+
+// DISPLAY COORDINATES WHEN MAP IS CLICKED
+map.on("click", function (event) {
+  const lat = event.latlng.lat;
+  const lng = event.latlng.lng;
+
+  document.getElementById("coordinates").innerHTML =
+    "<b>Latitude:</b> " +
+    lat.toFixed(5) +
+    "<br><b>Longitude:</b> " +
+    lng.toFixed(5);
+
+  L.popup()
+    .setLatLng(event.latlng)
+    .setContent(
+      "<b>Selected Location</b><br>" +
+        "Latitude: " +
+        lat.toFixed(5) +
+        "<br>Longitude: " +
+        lng.toFixed(5)
+    )
+    .openOn(map);
+});
+
+// ==================================
+// SEARCH ANY PLACE
+// ==================================
+
+let searchMarker = null;
+
+// SEARCH FUNCTION
+async function searchPlace() {
+  const searchInput = document.getElementById("searchInput");
+  const results = document.getElementById("searchResults");
+
+  const place = searchInput.value.trim();
+
+  if (place === "") {
+    results.textContent = "Please enter a place to search.";
+    return;
+  }
+
+  results.textContent = "Searching...";
+
+  try {
+    const url =
+      "https://nominatim.openstreetmap.org/search?format=jsonv2&q=" +
+      encodeURIComponent(place) +
+      "&limit=5";
+
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error("Search service unavailable.");
+    }
+
+    const data = await response.json();
+
+    if (data.length === 0) {
+      results.textContent = "No places found. Try another search.";
+      return;
+    }
+
+    results.replaceChildren();
+
+    data.forEach(function (location) {
+      const button = document.createElement("button");
+
+      button.textContent = location.display_name;
+
+      button.style.display = "block";
+      button.style.width = "100%";
+      button.style.padding = "10px";
+      button.style.marginBottom = "5px";
+      button.style.textAlign = "left";
+      button.style.cursor = "pointer";
+
+      button.addEventListener("click", function () {
+        const lat = Number(location.lat);
+        const lng = Number(location.lon);
+
+        // MOVE MAP TO SEARCHED PLACE
+        map.setView([lat, lng], 17);
+
+        // REMOVE PREVIOUS SEARCH MARKER
+        if (searchMarker) {
+          map.removeLayer(searchMarker);
+        }
+
+        // ADD NEW SEARCH MARKER
+        searchMarker = L.marker([lat, lng])
+          .addTo(map)
+          .bindPopup(
+            "<b>Search Result</b><br>" +
+            location.display_name
+          )
+          .openPopup();
+
+        // DISPLAY COORDINATES
+        document.getElementById("coordinates").innerHTML =
+          "<b>Latitude:</b> " +
+          lat.toFixed(5) +
+          "<br><b>Longitude:</b> " +
+          lng.toFixed(5);
+
+        // CLEAR SEARCH RESULTS
+        results.replaceChildren();
+      });
+
+      results.appendChild(button);
+    });
+  } catch (error) {
+    results.textContent =
+      "Unable to search. Please check your internet connection.";
+  }
+}
+
+// SEARCH USING ENTER KEY
+document
+  .getElementById("searchInput")
+  .addEventListener("keydown", function (event) {
+    if (event.key === "Enter") {
+      searchPlace();
+    }
+  });
