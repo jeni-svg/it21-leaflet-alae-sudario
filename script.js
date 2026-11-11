@@ -3,14 +3,11 @@ const center = [8.42264, 124.81425];
 
 const map = L.map("map").setView(center, 15);
 
-// ADD OPENSTREETMAP
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   attribution: "&copy; OpenStreetMap contributors",
   maxZoom: 19,
 }).addTo(map);
 
-// THREE COMMUNITY LANDMARKS IN BARANGAY ALAE
-// Some coordinates are approximate.
 
 const locations = [
   {
@@ -33,7 +30,7 @@ const locations = [
   },
 ];
 
-// CREATE MARKERS AND POPUPS
+
 locations.forEach(function (place) {
   const marker = L.marker([place.lat, place.lng]).addTo(map);
 
@@ -52,7 +49,7 @@ locations.forEach(function (place) {
   );
 });
 
-// CREATE 500-METER CIRCLE
+
 L.circle(center, {
   color: "blue",
   fillColor: "#30a3ec",
@@ -60,7 +57,7 @@ L.circle(center, {
   radius: 500,
 }).addTo(map);
 
-// DISPLAY COORDINATES WHEN MAP IS CLICKED
+
 map.on("click", function (event) {
   const lat = event.latlng.lat;
   const lng = event.latlng.lng;
@@ -83,13 +80,9 @@ map.on("click", function (event) {
     .openOn(map);
 });
 
-// ==================================
-// SEARCH ANY PLACE
-// ==================================
-
 let searchMarker = null;
 
-// SEARCH FUNCTION
+
 async function searchPlace() {
   const searchInput = document.getElementById("searchInput");
   const results = document.getElementById("searchResults");
@@ -140,15 +133,14 @@ async function searchPlace() {
         const lat = Number(location.lat);
         const lng = Number(location.lon);
 
-        // MOVE MAP TO SEARCHED PLACE
         map.setView([lat, lng], 17);
 
-        // REMOVE PREVIOUS SEARCH MARKER
+        
         if (searchMarker) {
           map.removeLayer(searchMarker);
         }
 
-        // ADD NEW SEARCH MARKER
+      
         searchMarker = L.marker([lat, lng])
           .addTo(map)
           .bindPopup(
@@ -157,14 +149,13 @@ async function searchPlace() {
           )
           .openPopup();
 
-        // DISPLAY COORDINATES
         document.getElementById("coordinates").innerHTML =
           "<b>Latitude:</b> " +
           lat.toFixed(5) +
           "<br><b>Longitude:</b> " +
           lng.toFixed(5);
 
-        // CLEAR SEARCH RESULTS
+       
         results.replaceChildren();
       });
 
@@ -176,7 +167,7 @@ async function searchPlace() {
   }
 }
 
-// SEARCH USING ENTER KEY
+
 document
   .getElementById("searchInput")
   .addEventListener("keydown", function (event) {
